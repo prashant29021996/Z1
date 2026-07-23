@@ -1,6 +1,6 @@
 # Lead Distribution Portal
 
-A lightweight lead distribution system with a client-facing web form, real-time internal dashboard, and HubSpot CRM integration (optional).
+A lightweight lead distribution system with a client-facing web form, real-time internal dashboard, and HubSpot CRM integration (optional)
 
 ## Architecture
 
