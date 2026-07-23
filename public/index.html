@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lead Distribution Portal - Submit Lead</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    }
+    .logo { text-align: center; margin-bottom: 8px; }
+    .logo h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .logo p {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #0f172a;
+      background: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      background: #ffffff;
+    }
+    .form-group select { cursor: pointer; }
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    .form-row .form-group { flex: 1; }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.35); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    .success-message .icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 12px;
+    }
+    .success-message h2 { color: #059669; font-size: 20px; margin-bottom: 8px; }
+    .success-message p { color: #64748b; font-size: 14px; }
+    .error-message {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .footer { text-align: center; margin-top: 24px; }
+    .footer a {
+      color: #94a3b8;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .footer a:hover { color: #3b82f6; }
+    .badge {
+      display: inline-block;
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="logo">
+        <h1>Lead Portal</h1>
+        <p>Submit your details to get started</p>
+      </div>
+      <div class="divider"></div>
+
+      <div id="errorContainer" class="error-message"></div>
+
+      <form id="leadForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="first_name">First Name</label>
+            <input type="text" id="first_name" name="first_name" required placeholder="John">
+          </div>
+          <div class="form-group">
+            <label for="last_name">Last Name</label>
+            <input type="text" id="last_name" name="last_name" required placeholder="Doe">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="email">Corporate Email</label>
+          <input type="email" id="email" name="email" required placeholder="john@company.com">
+        </div>
+        <div class="form-group">
+          <label for="company">Company Name</label>
+          <input type="text" id="company" name="company" required placeholder="Acme Inc.">
+        </div>
+        <div class="form-group">
+          <label for="budget">Estimated Annual Budget</label>
+          <select id="budget" name="budget" required>
+            <option value="">Select a budget range</option>
+            <option value="Under $10k">Under $10k</option>
+            <option value="$10k-$50k">$10k - $50k</option>
+            <option value="Greater than $50k">Greater than $50k</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">
+          Submit Lead
+        </button>
+      </form>
+
+      <div id="successMessage" class="success-message">
+        <span class="icon">✅</span>
+        <h2>Lead Submitted!</h2>
+        <p>Your information has been received. We'll be in touch soon.</p>
+        <div class="badge">Submit another lead</div>
+      </div>
+    </div>
+    <div class="footer">
+      <a href="/dashboard">Internal Dashboard →</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('leadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successMsg = document.getElementById('successMessage');
+    const errorContainer = document.getElementById('errorContainer');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorContainer.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Submission failed');
+        }
+
+        form.style.display = 'none';
+        successMsg.style.display = 'block';
+      } catch (err) {
+        errorContainer.textContent = err.message;
+        errorContainer.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Lead';
+      }
+    });
+
+    // Allow re-submitting another lead
+    document.querySelector('.badge')?.addEventListener('click', () => {
+      form.style.display = 'block';
+      successMsg.style.display = 'none';
+      form.reset();
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Lead';
+    });
+  </script>
+</body>
+</html>

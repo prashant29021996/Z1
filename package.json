@@ -1,0 +1,26 @@
+{
+  "name": "lead-distribution-portal",
+  "version": "1.0.0",
+  "description": "Lead Distribution Portal - Form submission, real-time dashboard, and HubSpot CRM integration",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "keywords": [
+    "leads",
+    "hubspot",
+    "crm",
+    "dashboard"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "pg": "^8.22.0",
+    "uuid": "^10.0.0"
+  }
+}

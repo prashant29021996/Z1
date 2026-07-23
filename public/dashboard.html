@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lead Distribution Portal - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      min-height: 100vh;
+    }
+    .header {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 { font-size: 22px; font-weight: 700; }
+    .header .subtitle { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+    .header-links { display: flex; gap: 16px; }
+    .header-links a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .header-links a:hover { color: #ffffff; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+    /* Analytics Badges */
+    .analytics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .analytics-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .analytics-card .label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .analytics-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 4px;
+    }
+    .analytics-card .value.green { color: #059669; }
+    .analytics-card .value.blue { color: #2563eb; }
+
+    /* HubSpot Router Control */
+    .hubspot-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+    .hubspot-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .hubspot-header h2 { font-size: 16px; font-weight: 600; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .status-badge.connected {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+    }
+    .status-badge.disconnected {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+    .status-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .status-badge.connected .dot { background: #059669; }
+    .status-badge.disconnected .dot { background: #dc2626; }
+    .hubspot-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .hubspot-controls input[type="text"] {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    .hubspot-controls input[type="text"]:focus { border-color: #3b82f6; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-secondary { background: #e2e8f0; color: #475569; }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .hubspot-info {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 12px;
+    }
+
+    /* Live Lead Feed Table */
+    .table-card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .table-header h2 { font-size: 16px; font-weight: 600; }
+    .table-header .count {
+      font-size: 13px;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .table-wrapper { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead th {
+      text-align: left;
+      padding: 12px 24px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 14px 24px;
+      font-size: 14px;
+      border-bottom: 1px solid #f1f5f9;
+      white-space: nowrap;
+    }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr:last-child td { border-bottom: none; }
+    .status-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-tag.received { background: #dbeafe; color: #1d4ed8; }
+    .status-tag.synced { background: #d1fae5; color: #059669; }
+    .status-tag.pending { background: #fef3c7; color: #d97706; }
+    .status-tag.skipped { background: #f1f5f9; color: #64748b; }
+    .status-tag.failed { background: #fef2f2; color: #dc2626; }
+    .name-cell { font-weight: 500; }
+    .email-cell { color: #2563eb; }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #94a3b8;
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+    .loading-row td { text-align: center; padding: 40px; color: #94a3b8; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      .header { flex-direction: column; gap: 12px; text-align: center; }
+      .analytics-row { grid-template-columns: 1fr; }
+      .hubspot-controls { flex-direction: column; }
+      .hubspot-controls input[type="text"] { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Lead Distribution Dashboard</h1>
+      <div class="subtitle">Real-time monitoring & control panel</div>
+    </div>
+    <div class="header-links">
+      <a href="/">← Lead Form</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Analytics Badges -->
+    <div class="analytics-row">
+      <div class="analytics-card">
+        <div class="label">Total Leads Ingested</div>
+        <div class="value blue" id="totalLeads">0</div>
+      </div>
+      <div class="analytics-card">
+        <div class="label">Total Pipeline Value</div>
+        <div class="value green" id="totalPipeline">$0</div>
+      </div>
+    </div>
+
+    <!-- HubSpot Router Control -->
+    <div class="hubspot-card">
+      <div class="hubspot-header">
+        <h2>🔌 HubSpot Router Control</h2>
+        <span class="status-badge disconnected" id="hubspotStatusBadge">
+          <span class="dot"></span>
+          <span id="hubspotStatusText">Disconnected</span>
+        </span>
+      </div>
+      <div class="hubspot-controls">
+        <input type="text" id="hubspotTokenInput" placeholder="Enter HubSpot Access Token..." />
+        <button class="btn btn-primary" id="enableHubspotBtn">Enable Connection</button>
+        <button class="btn btn-danger" id="disableHubspotBtn" disabled>Disconnect</button>
+      </div>
+      <div class="hubspot-info" id="hubspotInfo">
+        Status: Integration not configured. Enter an access token and click "Enable Connection" to activate.
+      </div>
+    </div>
+
+    <!-- Live Lead Feed Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h2>📋 Live Lead Feed</h2>
+        <span class="count" id="leadCount">0 leads</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Company</th>
+              <th>Budget</th>
+              <th>Local Status</th>
+              <th>HubSpot Sync</th>
+              <th>Submitted</th>
+            </tr>
+          </thead>
+          <tbody id="leadsTableBody">
+            <tr class="loading-row">
+              <td colspan="7">Loading leads...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // State
+    // ============================================================
+    let leads = [];
+    let stats = { total_leads: 0, total_pipeline_value: 0 };
+    let hubspotStatus = { connected: false, enabled: false, hasToken: false };
+
+    // ============================================================
+    // DOM References
+    // ============================================================
+    const tbody = document.getElementById('leadsTableBody');
+    const totalLeadsEl = document.getElementById('totalLeads');
+    const totalPipelineEl = document.getElementById('totalPipeline');
+    const leadCountEl = document.getElementById('leadCount');
+    const hubspotStatusBadge = document.getElementById('hubspotStatusBadge');
+    const hubspotStatusText = document.getElementById('hubspotStatusText');
+    const hubspotInfo = document.getElementById('hubspotInfo');
+    const enableBtn = document.getElementById('enableHubspotBtn');
+    const disableBtn = document.getElementById('disableHubspotBtn');
+    const tokenInput = document.getElementById('hubspotTokenInput');
+
+    // ============================================================
+    // Formatting Helpers
+    // ============================================================
+    function formatCurrency(amount) {
+      if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+      if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+      return `$${amount}`;
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function statusTagClass(status) {
+      const map = {
+        'received': 'received',
+        'synced': 'synced',
+        'pending': 'pending',
+        'skipped': 'skipped',
+        'failed': 'failed',
+      };
+      return map[status] || 'pending';
+    }
+
+    // ============================================================
+    // Render Functions
+    // ============================================================
+    function renderLeads() {
+      if (leads.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="icon">📭</div>
+                <p>No leads submitted yet. Share the lead form to get started.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = leads.map(lead => `
+        <tr>
+          <td class="name-cell">${escapeHtml(lead.first_name)} ${escapeHtml(lead.last_name)}</td>
+          <td class="email-cell">${escapeHtml(lead.email)}</td>
+          <td>${escapeHtml(lead.company)}</td>
+          <td>${escapeHtml(lead.budget)}</td>
+          <td><span class="status-tag ${statusTagClass(lead.local_status)}">${escapeHtml(lead.local_status)}</span></td>
+          <td><span class="status-tag ${statusTagClass(lead.hubspot_status)}">${escapeHtml(lead.hubspot_status)}</span></td>
+          <td>${formatDate(lead.created_at)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderStats() {
+      totalLeadsEl.textContent = stats.total_leads;
+      totalPipelineEl.textContent = formatCurrency(stats.total_pipeline_value);
+      leadCountEl.textContent = `${stats.total_leads} lead${stats.total_leads !== 1 ? 's' : ''}`;
+    }
+
+    function renderHubspotStatus() {
+      const connected = hubspotStatus.connected;
+      hubspotStatusBadge.className = `status-badge ${connected ? 'connected' : 'disconnected'}`;
+      hubspotStatusText.textContent = connected ? 'Connected' : 'Disconnected';
+      enableBtn.disabled = connected;
+      disableBtn.disabled = !connected;
+
+      if (connected) {
+        hubspotInfo.textContent = '✅ HubSpot integration is active. New leads will be synced automatically.';
+      } else if (hubspotStatus.enabled && !hubspotStatus.hasToken) {
+        hubspotInfo.textContent = '⚠️ Integration enabled but no access token configured. Enter a token and reconnect.';
+      } else {
+        hubspotInfo.textContent = '⏸️ HubSpot integration is disabled. Leads will be stored locally only.';
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ============================================================
+    // Data Fetching
+    // ============================================================
+    async function fetchInitialData() {
+      try {
+        const [leadsRes, statsRes, hubspotRes] = await Promise.all([
+          fetch('/api/leads'),
+          fetch('/api/stats'),
+          fetch('/api/hubspot'),
+        ]);
+        leads = await leadsRes.json();
+        stats = await statsRes.json();
+        hubspotStatus = await hubspotRes.json();
+        renderLeads();
+        renderStats();
+        renderHubspotStatus();
+      } catch (err) {
+        console.error('Failed to fetch initial data:', err);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#dc2626;">Failed to load data. Is the server running?</td></tr>`;
+      }
+    }
+
+    // ============================================================
+    // Real-time Updates: SSE (local dev) + Polling fallback (Vercel)
+    // ============================================================
+    let pollingInterval = null;
+
+    function startPolling() {
+      pollingInterval = setInterval(async () => {
+        try {
+          const [leadsRes, statsRes, hubspotRes] = await Promise.all([
+            fetch('/api/leads'),
+            fetch('/api/stats'),
+            fetch('/api/hubspot'),
+          ]);
+          const newLeads = await leadsRes.json();
+          const newStats = await statsRes.json();
+          const newHubspotStatus = await hubspotRes.json();
+
+          // Only re-render if data actually changed
+          if (JSON.stringify(newLeads) !== JSON.stringify(leads)) {
+            leads = newLeads;
+            renderLeads();
+          }
+          if (JSON.stringify(newStats) !== JSON.stringify(stats)) {
+            stats = newStats;
+            renderStats();
+          }
+          if (JSON.stringify(newHubspotStatus) !== JSON.stringify(hubspotStatus)) {
+            hubspotStatus = newHubspotStatus;
+            renderHubspotStatus();
+          }
+        } catch (err) {
+          // Silent fail - polling will retry
+        }
+      }, 3000);
+    }
+
+    function connectSSE() {
+      const eventSource = new EventSource('/api/events');
+
+      eventSource.addEventListener('new-lead', (e) => {
+        const lead = JSON.parse(e.data);
+        leads.unshift(lead);
+        renderLeads();
+      });
+
+      eventSource.addEventListener('lead-updated', (e) => {
+        const update = JSON.parse(e.data);
+        const idx = leads.findIndex(l => l.id === update.id);
+        if (idx !== -1) {
+          Object.assign(leads[idx], update);
+          renderLeads();
+        }
+      });
+
+      eventSource.addEventListener('stats-updated', (e) => {
+        stats = JSON.parse(e.data);
+        renderStats();
+      });
+
+      eventSource.addEventListener('hubspot-status', (e) => {
+        const status = JSON.parse(e.data);
+        hubspotStatus.connected = status.connected;
+        renderHubspotStatus();
+      });
+
+      eventSource.onerror = () => {
+        console.warn('SSE connection lost. Falling back to polling...');
+        eventSource.close();
+        if (pollingInterval) clearInterval(pollingInterval);
+        startPolling();
+      };
+
+      // SSE opened successfully - clear polling if active
+      eventSource.onopen = () => {
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          pollingInterval = null;
+        }
+      };
+    }
+
+    function startRealtimeUpdates() {
+      // Try SSE first; if it fails, fall back to polling
+      if (typeof EventSource !== 'undefined') {
+        try {
+          connectSSE();
+          // If SSE fails to connect, the onerror handler will start polling
+        } catch (e) {
+          startPolling();
+        }
+      } else {
+        startPolling();
+      }
+    }
+
+    // ============================================================
+    // HubSpot Control Actions
+    // ============================================================
+    async function updateHubspotStatusFromServer() {
+      try {
+        const res = await fetch('/api/hubspot');
+        hubspotStatus = await res.json();
+        renderHubspotStatus();
+      } catch (err) {
+        console.error('Failed to fetch HubSpot status:', err);
+      }
+    }
+
+    enableBtn.addEventListener('click', async () => {
+      const token = tokenInput.value.trim();
+      if (!token) {
+        alert('Please enter a HubSpot access token.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/hubspot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'enable', token }),
+        });
+        const result = await res.json();
+        if (result.connected) {
+          hubspotStatus.connected = true;
+          renderHubspotStatus();
+          tokenInput.value = '';
+        }
+      } catch (err) {
+        console.error('Failed to enable HubSpot:', err);
+        alert('Failed to enable HubSpot connection.');
+      }
+    });
+
+    disableBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/hubspot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'disable' }),
+        });
+        const result = await res.json();
+        if (!result.connected) {
+          hubspotStatus.connected = false;
+          renderHubspotStatus();
+        }
+      } catch (err) {
+        console.error('Failed to disable HubSpot:', err);
+        alert('Failed to disable HubSpot connection.');
+      }
+    });
+
+    // ============================================================
+    // Init
+    // ============================================================
+    fetchInitialData();
+    startRealtimeUpdates();
+  </script>
+</body>
+</html>

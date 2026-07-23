@@ -1,0 +1,28 @@
+// SSE (Server-Sent Events) manager for real-time updates
+
+const clients = new Set();
+
+function addClient(res) {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  });
+  res.write('\n');
+  clients.add(res);
+  console.log(`SSE client connected. Total clients: ${clients.size}`);
+
+  res.on('close', () => {
+    clients.delete(res);
+    console.log(`SSE client disconnected. Total clients: ${clients.size}`);
+  });
+}
+
+function broadcast(event, data) {
+  const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of clients) {
+    client.write(message);
+  }
+}
+
+module.exports = { addClient, broadcast };
