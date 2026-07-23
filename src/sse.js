@@ -25,4 +25,11 @@ function broadcast(event, data) {
   }
 }
 
-module.exports = { addClient, broadcast };
+function cleanup() {
+  for (const client of clients) {
+    client.end();
+  }
+  clients.clear();
+}
+
+module.exports = { addClient, broadcast, cleanup };

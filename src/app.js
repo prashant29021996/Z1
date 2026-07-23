@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { initDB, insertLead, getAllLeads, getStats } = require('../lib/db');
-const { addClient } = require('./sse');
+const { initDB, insertLead, getAllLeads, getStats, getPool } = require('../lib/db');
+const { addClient, cleanup: sseCleanup } = require('./sse');
 const { getStatus, enable, disable, syncLead } = require('../lib/hubspot');
 
 const app = express();
@@ -23,21 +23,30 @@ app.post('/api/leads', async (req, res) => {
   try {
     const { first_name, last_name, email, company, budget } = req.body;
 
-    if (!first_name || !last_name || !email || !company || !budget) {
-      return res.status(400).json({ error: 'All fields are required' });
+    const errors = [];
+    if (!first_name || !first_name.trim()) errors.push('First name is required');
+    if (!last_name || !last_name.trim()) errors.push('Last name is required');
+    if (!email || !email.trim()) errors.push('Email is required');
+    if (!company || !company.trim()) errors.push('Company name is required');
+    if (!budget) errors.push('Budget is required');
+
+    if (errors.length > 0) {
+      return res.status(400).json({ error: errors.join('; ') });
     }
 
     const validBudgets = ['Under $10k', '$10k-$50k', 'Greater than $50k'];
     if (!validBudgets.includes(budget)) {
-      return res.status(400).json({ error: 'Invalid budget option' });
+      return res.status(400).json({
+        error: `Invalid budget option "${budget}". Must be one of: ${validBudgets.join(', ')}`,
+      });
     }
 
     const lead = {
       id: uuidv4(),
-      first_name,
-      last_name,
-      email,
-      company,
+      first_name: first_name.trim(),
+      last_name: last_name.trim(),
+      email: email.trim().toLowerCase(),
+      company: company.trim(),
       budget,
     };
 
@@ -58,7 +67,7 @@ app.post('/api/leads', async (req, res) => {
     res.status(201).json(savedLead);
   } catch (err) {
     console.error('Error creating lead:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Failed to create lead: ${err.message}` });
   }
 });
 
@@ -69,7 +78,7 @@ app.get('/api/leads', async (req, res) => {
     res.json(leads);
   } catch (err) {
     console.error('Error fetching leads:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Failed to fetch leads: ${err.message}` });
   }
 });
 
@@ -80,8 +89,20 @@ app.get('/api/stats', async (req, res) => {
     res.json(stats);
   } catch (err) {
     console.error('Error fetching stats:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Failed to fetch stats: ${err.message}` });
   }
+});
+
+// ============================================================
+// Health Check
+// ============================================================
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    db: getPool() ? 'connected' : 'disconnected',
+  });
 });
 
 // ============================================================
@@ -141,15 +162,74 @@ app.get('/dashboard', (req, res) => {
 async function start() {
   try {
     await initDB();
-    app.listen(PORT, () => {
-      console.log(`Lead Distribution Portal running at http://localhost:${PORT}`);
+    const server = app.listen(PORT, () => {
+      console.log('\n  ✓ Lead Distribution Portal running');
+      console.log('  ───────────────────────────────────');
       console.log(`  Form:      http://localhost:${PORT}/`);
       console.log(`  Dashboard: http://localhost:${PORT}/dashboard`);
+      console.log(`  Health:    http://localhost:${PORT}/api/health\n`);
     });
+
+    // ============================================================
+    // Graceful Shutdown
+    // ============================================================
+    const shutdown = async (signal) => {
+      console.log(`\n  ⚡ Received ${signal}. Shutting down gracefully...`);
+
+      server.close(async () => {
+        console.log('  ✓ HTTP server closed');
+
+        // Close SSE connections
+        sseCleanup();
+        console.log('  ✓ SSE connections cleaned up');
+
+        // Close database pool
+        try {
+          await getPool().end();
+          console.log('  ✓ Database pool closed');
+        } catch (err) {
+          console.error('  ✗ Error closing database pool:', err.message);
+        }
+
+        console.log('  ✓ Shutdown complete. Goodbye!\n');
+        process.exit(0);
+      });
+
+      // Force shutdown after 10 seconds
+      setTimeout(() => {
+        console.error('  ✗ Forced shutdown after timeout');
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+
+    return server;
   } catch (err) {
-    console.error('Failed to start server:', err);
+    console.error('\n  ✗ Failed to start server:');
+    console.error(`    ${err.message}\n`);
+
+    if (err.code === 'ECONNREFUSED') {
+      console.error('    ⚠️  Could not connect to PostgreSQL.');
+      console.error('    Make sure the database is running:');
+      console.error('      docker compose up -d');
+      console.error('    Or set DATABASE_URL environment variable.\n');
+    } else if (err.code === 'ENOTFOUND') {
+      console.error('    ⚠️  Database host not found.');
+      console.error('    Check your DATABASE_URL or DB_HOST setting.\n');
+    } else if (err.code === '28P01') {
+      console.error('    ⚠️  Authentication failed.');
+      console.error('    Check your DB_USER and DB_PASSWORD settings.\n');
+    }
+
     process.exit(1);
   }
 }
 
-start();
+// Only start if this is the main module (not during tests)
+if (require.main === module) {
+  start();
+}
+
+module.exports = { app, start };
