@@ -206,6 +206,10 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       errorContainer.style.display = 'none';
+      errorContainer.className = 'error-message';
+      document.querySelectorAll('.form-group input, .form-group select').forEach(el => {
+        el.style.borderColor = '#cbd5e1';
+      });
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
 
@@ -221,6 +225,13 @@
 
         if (!res.ok) {
           const err = await res.json();
+
+          // Highlight the email field if duplicate
+          if (err.field === 'email') {
+            document.getElementById('email').focus();
+            document.getElementById('email').style.borderColor = '#dc2626';
+          }
+
           throw new Error(err.error || 'Submission failed');
         }
 

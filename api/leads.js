@@ -57,6 +57,12 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     console.error('Error in /api/leads:', err);
+    if (err.code === '23505' && err.constraint === 'leads_email_key') {
+      return res.status(409).json({
+        error: 'A lead with this email address already exists.',
+        field: 'email',
+      });
+    }
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -67,6 +67,12 @@ app.post('/api/leads', async (req, res) => {
     res.status(201).json(savedLead);
   } catch (err) {
     console.error('Error creating lead:', err);
+    if (err.code === '23505' && err.constraint === 'leads_email_key') {
+      return res.status(409).json({
+        error: 'A lead with this email address already exists.',
+        field: 'email',
+      });
+    }
     res.status(500).json({ error: `Failed to create lead: ${err.message}` });
   }
 });
